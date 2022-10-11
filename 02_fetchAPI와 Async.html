@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>02_fetchAPI와 Async</title>
+</head>
+<body>
+    <h1>Fetch API를 이용한 비동기 자바스크립트(ajax)</h1>
+    <!-- 버튼을 눌렀을 때, json의 object의 name과 address를 p태그에 출력 -->
+    <button id="fetch-btn">fetch API를 사용한 버튼</button>
+    <p id="fetch-print"></p>
+
+    <script>
+        // fetch는 promise 객체로 반환
+        // 그 값을 then으로 받아서 쓸 수 있다.
+        console.log(fetch('./01_data.txt'));
+
+        // then을 통해서 사용할 때, 안에 화살표함수를 사용해서 꺼내쓴다.
+        fetch('./01_data.txt')
+            .then(presponse => {
+                console.log(presponse);
+                // text()의 결과값이 promise 객체이므로 
+                // then으로 풀어서 사용하기 위해 return으로 전달
+                // promise 객체의 특징 : 한 번 읽으면(변수로 호출) 그 값을 return하고 내용을 비운다.
+                return presponse.text();
+        }).then(ptext => console.log(ptext));
+
+
+        // fetch API를 통해서 data.json을 콘솔에 출력하기
+        // json()을 통해 자바스크립트 객체로 만들어서 출력 = JSON.parse();
+        fetch('./01_data.json', {method:"GET"})
+            .then(rep => rep.json())  // rep객체의 json()결과값을 return으로 보냄
+            .then(jsonText => console.log(jsonText));
+
+
+        // 버튼을 눌렀을 때, json의 object의 name과 address를 p태그에 출력
+        const fetchBtn = document.querySelector('#fetch-btn');
+        fetchBtn.addEventListener('click', function() {
+            fetch('./01_data.json')
+                .then(rep2 => rep2.json())
+                .then(jsonData => {
+                    const pTag = document.querySelector('#fetch-print');
+                    pTag.innerHTML = `이름 : ${jsonData.object.name} <br>
+                                        주소 : ${jsonData.object.address}`
+                })
+        });
+
+
+        // Async-await로 비동기 접근
+        // async : 비동기로 사용할 함수 앞에 붙여주어 그 안의 내용을 비동기로 처리
+        //         > fetch API를 async 붙은 함수에 넣어줘서 처리 - then 대신에 사용
+        // await : 메소드 또는 함수 앞에 붙여주면 값이 바뀔 때까지 기다린다.
+        //         > promiss객체를 기다리는 키워드 - then 대신에 사용     
+        async function doFetch() {
+            // fetch API를 통해서 공공데이터의 response객체를 받아온다.
+            const asyncRep = await fetch('https://busan-food.openapi.redtable.global/api/menu-dscrn/korean?serviceKey=3cOsoxEnSZYVeTrfKrARQcYYonhykJwpZEurgWtYALHVUijbNn2a5tu7p5V7MIcw');
+            console.log(asyncRep);
+
+            // response객체의 ok 속성으로 연결여부 확인
+            if( !asyncRep.ok ) {
+                console.log("연결이 되지않았습니다");
+                return 0;
+            }
+
+            // 연결되었다면 response객체의 json()을 통해 data를 가져온다.
+            // json()을 통해 자바스크립트 객체로 만들기
+            const data = await asyncRep.json();
+            console.log(data);
+
+            // 가져온 data객체에 접근해서 원하는 속성만 출력
+            console.log(data.body[0].MENU_NM);
+
+            // p태그를 생성해서 body에 추가
+            const pTag = document.createElement('p');
+            pTag.innerHTML = data.body[0].MENU_NM;
+            document.querySelector('body').append(pTag);
+
+            // table태그를 만들어서 인덱스 0~99까지의 메뉴 이름을 td에 출력하기
+            // RSTR_NM을 이용하여 식당 이름도 함께 출력하기
+            const menuTable = document.createElement('table');
+            for (let i=0; i<100; i++) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${data.body[i].RSTR_NM}</td>
+                    <td>${data.body[i].MENU_NM}</td>`;
+                menuTable.append(tr);
+            }
+            document.querySelector('body').append(menuTable);
+        }
+
+        doFetch();  // 함수 실행
+
+
+        // async-await를 이용한 비동기 자바스트립트
+        async function asyncAwaitFunction() {
+            // fetch API를 통해서 response객체를 받아온다.
+            const response = await fetch('./01_data.json');
+            // 연결되었다면 response의 json()을 통해 data를 가져온다.
+            // json()을 통해 자바스크립트 객체로 만들 수 있다.
+            const data = await response.json();
+            // 받아온 data객체에 접근하여 사용
+            console.log(data);
+        }
+
+        asyncAwaitFunction()  // 함수 실행하는 것을 잊지 말자
+    </script>
+</body>
+</html>
