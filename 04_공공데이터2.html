@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>04_공공데이터2</title>
+</head>
+<body>
+    <h3>메뉴 10개 출력, 다음 버튼을 누르면 다음 메뉴 10개 출력하기</h3>
+    <button id="next-btn">다음</button> <br><br>
+
+    <script>
+        // fetch API와 async/await를 통해서 부산관광공사 음식테마거리 API 사용 
+
+        async function foodGet(nextCount) {
+            // 메뉴 이미지
+            const response = await fetch('https://busan-food.openapi.redtable.global/api/food/img?serviceKey=3cOsoxEnSZYVeTrfKrARQcYYonhykJwpZEurgWtYALHVUijbNn2a5tu7p5V7MIcw');
+            
+            let data = 0;
+            if (response.ok) {
+                data = await response.json();
+                console.log(data);
+            }
+
+            // 메뉴 아이디, 메뉴 이름, 식당 이름
+            const menuResponse = await fetch('https://busan-food.openapi.redtable.global/api/menu-dscrn/korean?serviceKey=3cOsoxEnSZYVeTrfKrARQcYYonhykJwpZEurgWtYALHVUijbNn2a5tu7p5V7MIcw')
+
+            let menuData = 0;
+            if (menuResponse.ok) {
+                menuData = await menuResponse.json();
+                console.log(menuData);
+            }
+            
+
+            // 가져온 값을 문서객체(DOM)을 만들어서 추가하기
+            const menuImg = data.body[0].FOOD_IMG_URL;
+            const menuName = menuData.body[0].MENU_NM;
+            const menuRe = menuData.body[0].RSTR_NM;
+
+            function menuTag(menuImg, menuName,menuRe) {
+                // DOM 요소 만들어서 추가하기
+                const menuImgTag = document.createElement("img")
+                menuImgTag.src = menuImg;
+                menuImgTag.style.width = '300px';
+
+                const menuNameTag = document.createElement("h3")
+                menuNameTag.innerHTML = menuName;
+
+                const menuReTag = document.createElement("p")
+                menuReTag.innerHTML = menuRe;
+
+                const menuBox = document.createElement("div");
+                menuBox.append(menuImgTag);
+                menuBox.append(menuNameTag);
+                menuBox.append(menuReTag);
+                menuBox.classList.add("list");
+
+                document.querySelector("body").append(menuBox);
+            }
+
+            // 메뉴 10개 출력하기
+            for (let i=nextCount; i<nextCount+10; i++) {
+                let count = 0;
+                for (let j=nextCount; j<1000; j++) {
+                    if (menuData.body[j].MENU_ID == data.body[i].MENU_ID) {
+                        count = j;
+                        console.log("console", j);  // 10개만 출력되는지 콘솔에서 확인
+                        break;
+                    }
+                }
+                // console.log(count);
+                menuTag(data.body[i].FOOD_IMG_URL, 
+                        menuData.body[count].MENU_NM,
+                        menuData.body[count].RSTR_NM);
+            }
+        }
+        foodGet(0);
+
+
+        // 버튼을 누르면 다른 메뉴 출력되게 하기 (출력된 거에 이어서 추가됨)
+        let nextCount = 0;
+        const button = document.querySelector('#next-btn');
+        button.addEventListener('click', () => {
+            console.log(nextCount);
+            nextCount += 10;
+            foodGet(nextCount);
+        });
+    </script>
+</body>
+</html>
